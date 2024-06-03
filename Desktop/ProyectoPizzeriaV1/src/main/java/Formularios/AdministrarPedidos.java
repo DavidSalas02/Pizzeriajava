@@ -1,0 +1,547 @@
+package Formularios;
+
+import Conexion.ConexionGeneral;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+
+public class AdministrarPedidos extends javax.swing.JFrame {
+
+    /**
+     * Creates new form AdministrarPedidos
+     */
+    public AdministrarPedidos() {
+    initComponents();
+    mostrarPedidos();
+    tblpedidos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            if (!e.getValueIsAdjusting()) {
+                mostrarDatosClienteSeleccionado();
+            }
+        }
+    });
+}
+
+   private void mostrarDatosClienteSeleccionado() {
+    int filaSeleccionada = tblpedidos.getSelectedRow();
+    if (filaSeleccionada != -1) {
+        String idCliente = (String) tblpedidos.getValueAt(filaSeleccionada, 1);
+        String idPedido = (String) tblpedidos.getValueAt(filaSeleccionada, 0);
+        try (Connection conn = ConexionGeneral.obtenerConexion()) {
+            // Obtener datos del cliente
+            String queryCliente = "SELECT name, address, email, phone_number FROM customer WHERE id_customer = ?";
+            PreparedStatement stmtCliente = conn.prepareStatement(queryCliente);
+            stmtCliente.setString(1, idCliente);
+            ResultSet rsCliente = stmtCliente.executeQuery();
+
+            if (rsCliente.next()) {
+                String nombreCliente = rsCliente.getString("name");
+                String direccionCliente = rsCliente.getString("address");
+                String correoCliente = rsCliente.getString("email");
+                String telefonoCliente = rsCliente.getString("phone_number");
+
+                txtnombre.setText(nombreCliente);
+                txtdireccion.setText(direccionCliente);
+                txtcorreo.setText(correoCliente);
+                txttelefono.setText(telefonoCliente);
+            }
+
+            // Obtener detalles del pedido y el estado
+            String queryPedido = "SELECT p.name AS pizza_name, oi.quantity, oi.price, o.status " +
+                                 "FROM order_item oi " +
+                                 "JOIN pizza p ON oi.id_pizza = p.id_pizza " +
+                                 "JOIN pizza_order o ON oi.id_order = o.id_order " +
+                                 "WHERE oi.id_order = ?";
+            PreparedStatement stmtPedido = conn.prepareStatement(queryPedido);
+            stmtPedido.setString(1, idPedido);
+            ResultSet rsPedido = stmtPedido.executeQuery();
+
+            DefaultTableModel model = (DefaultTableModel) tblorden.getModel();
+            model.setRowCount(0); // Limpiar tabla antes de llenarla
+
+            String estadoPedido = null;
+            while (rsPedido.next()) {
+                if (estadoPedido == null) {
+                    estadoPedido = rsPedido.getString("status");
+                }
+                String pizzaName = rsPedido.getString("pizza_name");
+                int cantidad = rsPedido.getInt("quantity");
+                double precioPorUnidad = rsPedido.getDouble("price");
+
+                Object[] row = {pizzaName, cantidad, precioPorUnidad};
+                model.addRow(row);
+            }
+
+            if (estadoPedido != null) {
+                txtestado.setText(estadoPedido);
+            } else {
+                txtestado.setText("Estado no disponible");
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al obtener los datos del cliente o del pedido: " + ex.getMessage());
+        }
+    }
+}
+
+
+private void mostrarPedidos() {
+    DefaultTableModel model = (DefaultTableModel) tblpedidos.getModel();
+    model.setRowCount(0);
+
+    try (Connection conn = ConexionGeneral.obtenerConexion()) {
+        String query = "SELECT id_order, id_customer, date, total, method, additional_notes, status FROM pizza_order";
+        PreparedStatement stmt = conn.prepareStatement(query);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            Object[] row = {
+                rs.getString("id_order"), // Cambiado a la columna del id_order
+                rs.getString("id_customer"),
+                rs.getTimestamp("date"),
+                rs.getDouble("total"),
+                rs.getString("method"),
+                rs.getString("additional_notes"),
+                rs.getString("status")
+            };
+            model.addRow(row);
+        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Error al obtener los pedidos: " + ex.getMessage());
+    }
+}
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tblpedidos = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        btnproceso = new javax.swing.JButton();
+        btnenenvio = new javax.swing.JButton();
+        btncancelarpedido = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        txtnombre = new javax.swing.JTextField();
+        txtdireccion = new javax.swing.JTextField();
+        txtcorreo = new javax.swing.JTextField();
+        txttelefono = new javax.swing.JTextField();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblorden = new javax.swing.JTable();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        txtestado = new javax.swing.JTextField();
+        btnatras = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(51, 255, 51));
+
+        tblpedidos.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "N° Orden", "Id_Cliente", "Hora de compra", "Total a pagar", "Metodo de pago", "Notas", "Estado"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(tblpedidos);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel1.setText("Pedidos");
+
+        btnproceso.setText("En proceso");
+        btnproceso.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnprocesoActionPerformed(evt);
+            }
+        });
+
+        btnenenvio.setText("En envio");
+        btnenenvio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnenenvioActionPerformed(evt);
+            }
+        });
+
+        btncancelarpedido.setText("Cancelar Pedido");
+        btncancelarpedido.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btncancelarpedidoActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(71, 71, 71)
+                .addComponent(btnproceso, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnenenvio, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(119, 119, 119)
+                .addComponent(btncancelarpedido, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(58, 58, 58))
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(288, 288, 288)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnproceso, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnenenvio, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btncancelarpedido, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(30, 30, 30))
+        );
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel2.setText("Datos del cliente");
+
+        jLabel3.setText("Nombre:");
+
+        jLabel4.setText("Direccion:");
+
+        jLabel5.setText("Correo:");
+
+        jLabel6.setText("Telefono:");
+
+        txtnombre.setEditable(false);
+
+        txtdireccion.setEditable(false);
+
+        txtcorreo.setEditable(false);
+
+        txttelefono.setEditable(false);
+
+        tblorden.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
+            },
+            new String [] {
+                "Nombre pizza", "Cantidad", "Total"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(tblorden);
+
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel7.setText("Pedido del cliente");
+
+        jLabel8.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel8.setText("Estado el pedido:");
+
+        txtestado.setEditable(false);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(txtnombre)
+                        .addComponent(txtdireccion)
+                        .addComponent(txtcorreo)
+                        .addComponent(txttelefono, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE))
+                    .addComponent(jLabel2))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel7)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtestado, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 115, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel7))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtnombre, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtdireccion, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtcorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtestado)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txttelefono, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(19, 19, 19))
+        );
+
+        btnatras.setText("Atras");
+        btnatras.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnatrasActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(btnatras, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnatras, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnprocesoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnprocesoActionPerformed
+        marcarPedidoEnProceso();
+
+    }//GEN-LAST:event_btnprocesoActionPerformed
+
+    private void btnenenvioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnenenvioActionPerformed
+        marcarPedidoEnEnvio();
+    }//GEN-LAST:event_btnenenvioActionPerformed
+
+    private void btncancelarpedidoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btncancelarpedidoActionPerformed
+        cancelarPedido();
+    }//GEN-LAST:event_btncancelarpedidoActionPerformed
+
+    private void btnatrasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnatrasActionPerformed
+        VistaAdmin abrir = new VistaAdmin();
+        abrir.setVisible(true);
+        this.setVisible(false);
+    }//GEN-LAST:event_btnatrasActionPerformed
+    private void cancelarPedido() {
+        int filaSeleccionada = tblpedidos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un pedido para cancelar.");
+            return;
+        }
+        int idPedido = Integer.parseInt((String) tblpedidos.getValueAt(filaSeleccionada, 0));
+        try (Connection conn = ConexionGeneral.obtenerConexion()) {
+            String query = "UPDATE pizza_order SET status = 'cancelado' WHERE id_order = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, idPedido);
+
+            int filasActualizadas = stmt.executeUpdate();
+            if (filasActualizadas > 0) {
+                JOptionPane.showMessageDialog(this, "El pedido ha sido cancelado.");
+                mostrarPedidos();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo cancelar el pedido.");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al cancelar el pedido: " + ex.getMessage());
+        }
+    }
+
+    private void marcarPedidoEnEnvio() {
+        int filaSeleccionada = tblpedidos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un pedido para marcar como 'En envío'.");
+            return;
+        }
+        int idPedido = Integer.parseInt((String) tblpedidos.getValueAt(filaSeleccionada, 0));
+        try (Connection conn = ConexionGeneral.obtenerConexion()) {
+            String query = "UPDATE pizza_order SET status = 'envío' WHERE id_order = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, idPedido);
+            int filasActualizadas = stmt.executeUpdate();
+            if (filasActualizadas > 0) {
+                JOptionPane.showMessageDialog(this, "El pedido ha sido marcado como 'En envío'.");
+                mostrarPedidos();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo marcar el pedido como 'En envío'.");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al marcar el pedido como 'En envío': " + ex.getMessage());
+        }
+    }
+
+
+    private void marcarPedidoEnProceso() {
+        int filaSeleccionada = tblpedidos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un pedido para marcar como 'En proceso'.");
+            return;
+        }
+        int idPedido = Integer.parseInt((String) tblpedidos.getValueAt(filaSeleccionada, 0));
+        try (Connection conn = ConexionGeneral.obtenerConexion()) {
+            String query = "UPDATE pizza_order SET status = 'en proceso' WHERE id_order = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, idPedido);
+
+            int filasActualizadas = stmt.executeUpdate();
+            if (filasActualizadas > 0) {
+                JOptionPane.showMessageDialog(this, "El pedido ha sido marcado como 'En proceso'.");
+                mostrarPedidos();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo marcar el pedido como 'En proceso'.");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al marcar el pedido como 'En proceso': " + ex.getMessage());
+        }
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(AdministrarPedidos.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(AdministrarPedidos.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(AdministrarPedidos.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(AdministrarPedidos.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new AdministrarPedidos().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnatras;
+    private javax.swing.JButton btncancelarpedido;
+    private javax.swing.JButton btnenenvio;
+    private javax.swing.JButton btnproceso;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTable tblorden;
+    private javax.swing.JTable tblpedidos;
+    private javax.swing.JTextField txtcorreo;
+    private javax.swing.JTextField txtdireccion;
+    private javax.swing.JTextField txtestado;
+    private javax.swing.JTextField txtnombre;
+    private javax.swing.JTextField txttelefono;
+    // End of variables declaration//GEN-END:variables
+}
